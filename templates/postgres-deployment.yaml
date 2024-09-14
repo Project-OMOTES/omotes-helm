@@ -1,0 +1,67 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  namespace: {{ .Release.Namespace }}
+  labels:
+    app: postgres-db
+  name: postgres-db
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: postgres-db
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      labels:
+        app: postgres-db
+    spec:
+      containers:
+        - env:
+            - name: PGDATA
+              value: /var/lib/postgresql/data
+            - name: POSTGRES_DB
+              value: omotes_jobs
+            - name: POSTGRES_USER
+              valueFrom:
+                configMapKeyRef:
+                  name: env-vars-cm
+                  key: POSTGRES_ROOT_USER
+            - name: POSTGRES_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: env-vars-secrets
+                  key: POSTGRES_ROOT_PASSWORD
+            - name: LOG_LEVEL
+              valueFrom:
+                configMapKeyRef:
+                  name: env-vars-cm
+                  key: LOG_LEVEL
+          image: postgres:15.4
+          livenessProbe:
+            exec:
+              command:
+                - pg_isready
+                - -U
+                - root
+                - -d
+                - omotes_jobs
+            failureThreshold: 10
+            periodSeconds: 5
+            timeoutSeconds: 5
+          name: postgres-db
+          volumeMounts:
+            - mountPath: /var/lib/postgresql/data
+              name: postgres-data
+      restartPolicy: Always
+      volumes:
+        - name: postgres-data
+          persistentVolumeClaim:
+            claimName: postgres-data
+        - configMap:
+            items:
+              - key: init.sql
+                path: init.sql
+            name: postgres-init-cm
+          name: postgres-init-cm

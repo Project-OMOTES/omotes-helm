@@ -1,0 +1,131 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  namespace: {{ .Release.Namespace }}
+  labels:
+    app: rabbitmq
+  name: rabbitmq
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: rabbitmq
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      labels:
+        app: rabbitmq
+    spec:
+      initContainers:
+        - name: rabbitmq-setup
+          image: rabbitmq:3.12-management
+          env:
+            - name: RABBITMQ_DEFAULT_USER
+              valueFrom:
+                configMapKeyRef:
+                  name: env-vars-cm
+                  key: RABBITMQ_ROOT_USER
+            - name: RABBITMQ_DEFAULT_PASS
+              valueFrom:
+                secretKeyRef:
+                  name: env-vars-secrets
+                  key: RABBITMQ_ROOT_PASSWORD
+            - name: RABBITMQ_OMOTES_USER_NAME
+              valueFrom:
+                configMapKeyRef:
+                  name: env-vars-cm
+                  key: RABBITMQ_OMOTES_USER_NAME
+            - name: RABBITMQ_OMOTES_USER_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: env-vars-secrets
+                  key: RABBITMQ_OMOTES_USER_PASSWORD
+            - name: RABBITMQ_CELERY_USER_NAME
+              valueFrom:
+                configMapKeyRef:
+                  name: env-vars-cm
+                  key: RABBITMQ_CELERY_USER_NAME
+            - name: RABBITMQ_CELERY_USER_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: env-vars-secrets
+                  key: RABBITMQ_CELERY_USER_PASSWORD
+            - name: LOG_LEVEL
+              valueFrom:
+                configMapKeyRef:
+                  name: env-vars-cm
+                  key: LOG_LEVEL
+          command: [ 'sh', '-c',
+            '
+            rabbitmq-server & 
+            (
+            until rabbitmq-diagnostics -q listeners --node rabbit@rabbitmq-nwn;
+            do echo waiting for rabbitmq; sleep 2; done;
+            chmod +x ./rabbitmq-init.sh;
+            ./rabbitmq-init.sh;
+            )
+            '
+          ]
+          volumeMounts:
+            - mountPath: /var/lib/rabbitmq
+              name: rabbitmq-data
+            - name: rabbitmq-init-cm
+              mountPath: /rabbitmq-init.sh
+              subPath: rabbitmq-init.sh
+      containers:
+        - name: rabbitmq
+          image: rabbitmq:3.12-management
+          env:
+            - name: RABBITMQ_DEFAULT_USER
+              valueFrom:
+                configMapKeyRef:
+                  name: env-vars-cm
+                  key: RABBITMQ_ROOT_USER
+            - name: RABBITMQ_DEFAULT_PASS
+              valueFrom:
+                secretKeyRef:
+                  name: env-vars-secrets
+                  key: RABBITMQ_ROOT_PASSWORD
+            - name: LOG_LEVEL
+              valueFrom:
+                configMapKeyRef:
+                  name: env-vars-cm
+                  key: LOG_LEVEL
+          livenessProbe:
+            exec:
+              command:
+                - rabbitmq-diagnostics -q listeners --node rabbit@rabbitmq-nwn
+            failureThreshold: 10
+            periodSeconds: 10
+            timeoutSeconds: 5
+          ports:
+            - containerPort: 5672
+              protocol: TCP
+            - containerPort: 15672
+              protocol: TCP
+          volumeMounts:
+            - mountPath: /var/lib/rabbitmq
+              name: rabbitmq-data
+            - mountPath: /etc/rabbitmq/rabbitmq.conf
+              name: rabbitmq-conf-cm
+              subPath: rabbitmq.conf
+      hostname: rabbitmq-nwn
+      restartPolicy: Always
+      volumes:
+        - name: rabbitmq-data
+          persistentVolumeClaim:
+            claimName: rabbitmq-data
+        - configMap:
+            items:
+              - key: rabbitmq.conf
+                path: rabbitmq.conf
+            name: rabbitmq-conf-cm
+          name: rabbitmq-conf-cm
+        - configMap:
+            items:
+              - key: rabbitmq-init.sh
+                path: rabbitmq-init.sh
+            name: rabbitmq-init-cm
+            defaultMode: 0777
+          name: rabbitmq-init-cm

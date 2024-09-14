@@ -1,0 +1,160 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  namespace: {{ .Release.Namespace }}
+  labels:
+    app: influxdb
+  name: influxdb
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: influxdb
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      labels:
+        app: influxdb
+    spec:
+#      initContainers:
+#        - name: influxdb-setup
+#          image: influxdb:1.7
+#          env:
+#            - name: INFLUXDB_ADMIN_USER
+#              valueFrom:
+#                configMapKeyRef:
+#                  name: env-vars-cm
+#                  key: INFLUXDB_ADMIN_USER
+#            - name: INFLUXDB_ADMIN_PASSWORD
+#              valueFrom:
+#                secretKeyRef:
+#                  name: env-vars-secrets
+#                  key: INFLUXDB_ADMIN_PASSWORD
+#            - name: INFLUXDB_PORT
+#              valueFrom:
+#                configMapKeyRef:
+#                  name: env-vars-cm
+#                  key: INFLUXDB_PORT
+#            - name: INFLUXDB_HTTP_BIND_ADDRESS
+#              valueFrom:
+#                configMapKeyRef:
+#                  name: env-vars-cm
+#                  key: INFLUXDB_PORT_BIND
+#            - name: INFLUXDB_BIND_ADDRESS
+#              valueFrom:
+#                configMapKeyRef:
+#                  name: env-vars-cm
+#                  key: INFLUXDB_RPC_PORT_BIND
+#            - name: INFLUXDB_DB
+#              value: omotes_timeseries
+#            - name: INFLUXDB_HTTP_AUTH_ENABLED
+#              value: "true"
+##            - name: INFLUXDB_WRITE_USER
+##              valueFrom:
+##                configMapKeyRef:
+##                  name: env-vars-cm
+##                  key: INFLUXDB_WRITE_USER
+##            - name: INFLUXDB_WRITE_USER_PASSWORD
+##              valueFrom:
+##                secretKeyRef:
+##                  name: env-vars-secrets
+##                  key: INFLUXDB_WRITE_USER_PASSWORD
+##            - name: INFLUXDB_FRONTEND_ADMIN_USER
+##              valueFrom:
+##                configMapKeyRef:
+##                  name: env-vars-cm
+##                  key: INFLUXDB_FRONTEND_ADMIN_USER
+##            - name: INFLUXDB_FRONTEND_ADMIN_USER_PASSWORD
+##              valueFrom:
+##                secretKeyRef:
+##                  name: env-vars-secrets
+##                  key: INFLUXDB_FRONTEND_ADMIN_USER_PASSWORD
+#            - name: LOG_LEVEL
+#              valueFrom:
+#                configMapKeyRef:
+#                  name: env-vars-cm
+#                  key: LOG_LEVEL
+#          command: [ 'sh', '-c',
+#            '
+#            influxd;
+###            &
+###            until curl -sL -I localhost:$INFLUXDB_PORT/ping;
+###            do echo waiting for influxdb; sleep 2; done;
+###            chmod +x ./influxdb-init.sh;
+###            ./influxdb-init.sh;
+#            '
+#          ]
+#          volumeMounts:
+#            - mountPath: /var/lib/influxdb
+#              name: influxdb-storage
+#            - name: influxdb-init-cm
+#              mountPath: /influxdb-init.sh
+#              subPath: influxdb-init.sh
+      containers:
+        - name: influxdb
+          image: influxdb:1.7
+          env:
+            - name: INFLUXDB_ADMIN_USER
+              valueFrom:
+                configMapKeyRef:
+                  name: env-vars-cm
+                  key: INFLUXDB_ADMIN_USER
+            - name: INFLUXDB_ADMIN_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: env-vars-secrets
+                  key: INFLUXDB_ADMIN_PASSWORD
+            - name: INFLUXDB_PORT
+              valueFrom:
+                configMapKeyRef:
+                  name: env-vars-cm
+                  key: INFLUXDB_PORT
+            - name: INFLUXDB_HTTP_BIND_ADDRESS
+              valueFrom:
+                configMapKeyRef:
+                  name: env-vars-cm
+                  key: INFLUXDB_PORT_BIND
+            - name: INFLUXDB_BIND_ADDRESS
+              valueFrom:
+                configMapKeyRef:
+                  name: env-vars-cm
+                  key: INFLUXDB_RPC_PORT_BIND
+            - name: INFLUXDB_DB
+              value: omotes_timeseries
+            - name: INFLUXDB_HTTP_AUTH_ENABLED
+              value: "true"
+            - name: LOG_LEVEL
+              valueFrom:
+                configMapKeyRef:
+                  name: env-vars-cm
+                  key: LOG_LEVEL
+          ports:
+            - containerPort: 8096
+              protocol: TCP
+            - containerPort: 8098
+              protocol: TCP
+          volumeMounts:
+            - mountPath: /var/lib/influxdb
+              name: influxdb-storage
+#          livenessProbe:
+#            exec:
+#              command:
+#                - curl
+#                - -sL
+#                - -I
+#                - localhost:$INFLUXDB_PORT/ping
+#            periodSeconds: 10
+#            timeoutSeconds: 5
+      restartPolicy: Always
+      volumes:
+        - name: influxdb-storage
+          persistentVolumeClaim:
+            claimName: influxdb-storage
+        - configMap:
+            items:
+              - key: influxdb-init.sh
+                path: influxdb-init.sh
+            name: influxdb-init-cm
+            defaultMode: 0777
+          name: influxdb-init-cm

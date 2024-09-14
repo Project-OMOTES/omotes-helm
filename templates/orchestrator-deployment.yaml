@@ -1,0 +1,237 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  namespace: {{ .Release.Namespace }}
+  labels:
+    app: orchestrator
+  name: orchestrator
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: orchestrator
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      labels:
+        app: orchestrator
+    spec:
+      initContainers:
+        - name: influxdb-setup
+          image: influxdb:1.7
+          env:
+            - name: INFLUXDB_ADMIN_USER
+              valueFrom:
+                configMapKeyRef:
+                  name: env-vars-cm
+                  key: INFLUXDB_ADMIN_USER
+            - name: INFLUXDB_ADMIN_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: env-vars-secrets
+                  key: INFLUXDB_ADMIN_PASSWORD
+            - name: INFLUXDB_PORT
+              valueFrom:
+                configMapKeyRef:
+                  name: env-vars-cm
+                  key: INFLUXDB_PORT
+            - name: INFLUXDB_HTTP_BIND_ADDRESS
+              valueFrom:
+                configMapKeyRef:
+                  name: env-vars-cm
+                  key: INFLUXDB_PORT_BIND
+            - name: INFLUXDB_BIND_ADDRESS
+              valueFrom:
+                configMapKeyRef:
+                  name: env-vars-cm
+                  key: INFLUXDB_RPC_PORT_BIND
+            - name: INFLUXDB_DB
+              value: omotes_timeseries
+            - name: INFLUXDB_HTTP_AUTH_ENABLED
+              value: "true"
+            - name: INFLUXDB_WRITE_USER
+              valueFrom:
+                configMapKeyRef:
+                  name: env-vars-cm
+                  key: INFLUXDB_WRITE_USER
+            - name: INFLUXDB_WRITE_USER_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: env-vars-secrets
+                  key: INFLUXDB_WRITE_USER_PASSWORD
+            - name: INFLUXDB_FRONTEND_ADMIN_USER
+              valueFrom:
+                configMapKeyRef:
+                  name: env-vars-cm
+                  key: INFLUXDB_FRONTEND_ADMIN_USER
+            - name: INFLUXDB_FRONTEND_ADMIN_USER_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: env-vars-secrets
+                  key: INFLUXDB_FRONTEND_ADMIN_USER_PASSWORD
+            - name: LOG_LEVEL
+              valueFrom:
+                configMapKeyRef:
+                  name: env-vars-cm
+                  key: LOG_LEVEL
+          command: [ 'sh', '-c',
+            '
+            until curl -sL -I omotes-influxdb:$INFLUXDB_PORT/ping;
+            do echo waiting for influxdb; sleep 2; done;
+            chmod +x ./influxdb-init.sh;
+            ./influxdb-init.sh;
+            '
+          ]
+          volumeMounts:
+#            - mountPath: /var/lib/influxdb
+#              name: influxdb-storage
+            - name: influxdb-init-cm
+              mountPath: /influxdb-init.sh
+              subPath: influxdb-init.sh
+        - name: postgres-setup
+          image: postgres:15.4
+          env:
+            - name: PG_DB
+              value: omotes_jobs
+            - name: PG_ROOT_USER
+              valueFrom:
+                configMapKeyRef:
+                  name: env-vars-cm
+                  key: POSTGRES_ROOT_USER
+            - name: PG_ROOT_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: env-vars-secrets
+                  key: POSTGRES_ROOT_PASSWORD
+            - name: LOG_LEVEL
+              valueFrom:
+                configMapKeyRef:
+                  name: env-vars-cm
+                  key: LOG_LEVEL
+            - name: PG_HOST
+              value: omotes-postgres-db
+            - name: PG_PORT
+              value: "5432"
+            - name: PG_ORCHESTRATOR_USER_NAME
+              valueFrom:
+                configMapKeyRef:
+                  name: env-vars-cm
+                  key: POSTGRES_ORCHESTRATOR_USER_NAME
+            - name: PG_ORCHESTRATOR_USER_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: env-vars-secrets
+                  key: POSTGRES_ORCHESTRATOR_USER_PASSWORD
+          volumeMounts:
+            - name: postgres-init-cm
+              mountPath: /init.sql
+              subPath: init.sql
+          command: [ 'sh', '-c',
+            '
+            until pg_isready -h $PG_HOST -p $PG_PORT -d $PG_DB;
+            do echo waiting for database; sleep 2; done;
+            psql postgresql://$PG_ROOT_USER:$PG_ROOT_PASSWORD@$PG_HOST:$PG_PORT/$PG_DB -v POSTGRESQL_USERNAME=$PG_ORCHESTRATOR_USER_NAME -v POSTGRESQL_PASSWORD=$PG_ORCHESTRATOR_USER_PASSWORD -f /init.sql
+            '
+          ]
+      containers:
+        - env:
+            - name: CELERY_RABBITMQ_USERNAME
+              valueFrom:
+                configMapKeyRef:
+                  name: env-vars-cm
+                  key: RABBITMQ_CELERY_USER_NAME
+            - name: CELERY_RABBITMQ_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: env-vars-secrets
+                  key: RABBITMQ_CELERY_USER_PASSWORD
+            - name: CELERY_RABBITMQ_HOSTNAME
+              value: omotes-rabbitmq
+            - name: CELERY_RABBITMQ_PORT
+              value: "5672"
+            - name: CELERY_RABBITMQ_VIRTUALHOST
+              value: omotes_celery
+            - name: SDK_RABBITMQ_USERNAME
+              valueFrom:
+                configMapKeyRef:
+                  name: env-vars-cm
+                  key: RABBITMQ_OMOTES_USER_NAME
+            - name: SDK_RABBITMQ_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: env-vars-secrets
+                  key: RABBITMQ_OMOTES_USER_PASSWORD
+            - name: SDK_RABBITMQ_HOSTNAME
+              value: omotes-rabbitmq
+            - name: SDK_RABBITMQ_PORT
+              value: "5672"
+            - name: SDK_RABBITMQ_VIRTUALHOST
+              value: omotes
+            - name: TASK_RABBITMQ_USERNAME
+              valueFrom:
+                configMapKeyRef:
+                  name: env-vars-cm
+                  key: RABBITMQ_CELERY_USER_NAME
+            - name: TASK_RABBITMQ_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: env-vars-secrets
+                  key: RABBITMQ_CELERY_USER_PASSWORD
+            - name: TASK_RABBITMQ_HOSTNAME
+              value: omotes-rabbitmq
+            - name: TASK_RABBITMQ_PORT
+              value: "5672"
+            - name: TASK_RABBITMQ_VIRTUALHOST
+              value: omotes_celery
+            - name: POSTGRESQL_HOST
+              value: omotes-postgres-db
+            - name: POSTGRESQL_PORT
+              value: "5432"
+            - name: POSTGRESQL_DATABASE
+              value: omotes_jobs
+            - name: POSTGRESQL_USERNAME
+              valueFrom:
+                configMapKeyRef:
+                  name: env-vars-cm
+                  key: POSTGRES_ORCHESTRATOR_USER_NAME
+            - name: POSTGRESQL_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: env-vars-secrets
+                  key: POSTGRES_ORCHESTRATOR_USER_PASSWORD
+            - name: LOG_LEVEL
+              valueFrom:
+                configMapKeyRef:
+                  name: env-vars-cm
+                  key: LOG_LEVEL
+          image: ghcr.io/project-omotes/omotes_orchestrator:1.0.0
+          name: orchestrator
+          volumeMounts:
+            - mountPath: /config/workflow_config.json
+              name: orchestrator-workflows-cm
+              subPath: workflow_config.json
+      restartPolicy: Always
+      volumes:
+        - configMap:
+            items:
+              - key: workflow_config_nwn.json
+                path: workflow_config.json
+            name: orchestrator-workflows-cm
+          name: orchestrator-workflows-cm
+        - configMap:
+            items:
+              - key: init.sql
+                path: init.sql
+            name: postgres-init-cm
+          name: postgres-init-cm
+#        - name: influxdb-storage
+#          persistentVolumeClaim:
+#            claimName: influxdb-storage
+        - configMap:
+            items:
+              - key: influxdb-init.sh
+                path: influxdb-init.sh
+            name: influxdb-init-cm
+            defaultMode: 0777
+          name: influxdb-init-cm

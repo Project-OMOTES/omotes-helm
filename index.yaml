@@ -14,6 +14,16 @@ entries:
   omotes-system:
   - apiVersion: v2
     appVersion: mvp.4.RC2
+    created: "2024-09-15T19:58:47.847789363Z"
+    description: A Helm chart for Kubernetes
+    digest: 12e2d07e3dc46075f6f9558870242ab7fb36e4d2473bb798570fc2c3bb2bac8a
+    name: omotes-system
+    type: application
+    urls:
+    - https://github.com/Project-OMOTES/omotes-helm/releases/download/omotes-system-0.1.5/omotes-system-0.1.5.tgz
+    version: 0.1.5
+  - apiVersion: v2
+    appVersion: mvp.4.RC2
     created: "2024-09-15T19:07:35.319935826Z"
     description: A Helm chart for Kubernetes
     digest: 5bb3aae124df8b5cf22553862b02ddd5f458454ab620e3006a9a30f53d325a6c
@@ -22,4 +32,4 @@ entries:
     urls:
     - https://github.com/Project-OMOTES/omotes-helm/releases/download/omotes-system-0.1.4/omotes-system-0.1.4.tgz
     version: 0.1.4
-generated: "2024-09-15T19:07:35.319948259Z"
+generated: "2024-09-15T19:58:47.84780422Z"

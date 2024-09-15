@@ -84,8 +84,6 @@ spec:
             '
           ]
           volumeMounts:
-#            - mountPath: /var/lib/influxdb
-#              name: omotes-influxdb-pvc
             - name: omotes-influxdb-init-cm
               mountPath: /influxdb-init.sh
               subPath: influxdb-init.sh
@@ -110,7 +108,7 @@ spec:
                   name: omotes-env-vars-cm
                   key: LOG_LEVEL
             - name: PG_HOST
-              value: omotes-postgres-db
+              value: omotes-postgres
             - name: PG_PORT
               value: "5432"
             - name: PG_ORCHESTRATOR_USER_NAME
@@ -185,7 +183,7 @@ spec:
             - name: TASK_RABBITMQ_VIRTUALHOST
               value: omotes_celery
             - name: POSTGRESQL_HOST
-              value: omotes-postgres-db
+              value: omotes-postgres
             - name: POSTGRESQL_PORT
               value: "5432"
             - name: POSTGRESQL_DATABASE
@@ -225,9 +223,6 @@ spec:
                 path: init.sql
             name: omotes-postgres-init-cm
           name: omotes-postgres-init-cm
-#        - name: omotes-influxdb-pvc
-#          persistentVolumeClaim:
-#            claimName: influxdb-storage
         - configMap:
             items:
               - key: influxdb-init.sh

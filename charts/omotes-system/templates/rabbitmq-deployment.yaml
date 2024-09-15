@@ -60,7 +60,7 @@ spec:
             '
             rabbitmq-server & 
             (
-            until rabbitmq-diagnostics -q listeners --node rabbit@rabbitmq-nwn;
+            until rabbitmq-diagnostics -q listeners --node rabbit@omotes-rabbitmq;
             do echo waiting for rabbitmq; sleep 2; done;
             chmod +x ./rabbitmq-init.sh;
             ./rabbitmq-init.sh;
@@ -95,7 +95,7 @@ spec:
           livenessProbe:
             exec:
               command:
-                - rabbitmq-diagnostics -q listeners --node rabbit@rabbitmq-nwn
+                - rabbitmq-diagnostics -q listeners --node rabbit@omotes-rabbitmq
             failureThreshold: 10
             periodSeconds: 10
             timeoutSeconds: 5
@@ -110,7 +110,7 @@ spec:
             - mountPath: /etc/rabbitmq/rabbitmq.conf
               name: omotes-rabbitmq-conf-cm
               subPath: rabbitmq.conf
-      hostname: omotes-rabbitmq-nwn
+      hostname: omotes-rabbitmq
       restartPolicy: Always
       volumes:
         - name: omotes-rabbitmq-pvc

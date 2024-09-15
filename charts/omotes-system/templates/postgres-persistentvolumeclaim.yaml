@@ -2,7 +2,7 @@ apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
   namespace: {{ .Release.Namespace }}
-  name: rabbitmq-data
+  name: omotes-postgres-pvc
 spec:
   accessModes:
     - ReadWriteOnce

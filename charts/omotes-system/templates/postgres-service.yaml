@@ -3,12 +3,12 @@ kind: Service
 metadata:
   namespace: {{ .Release.Namespace }}
   labels:
-    app: postgres-db
-  name: omotes-postgres-db
+    app: omotes-postgres
+  name: omotes-postgres
 spec:
   ports:
     - name: "5432"
       port: 5432
       targetPort: 5432
   selector:
-    app: postgres-db
+    app: omotes-postgres

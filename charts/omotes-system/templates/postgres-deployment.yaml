@@ -3,19 +3,19 @@ kind: Deployment
 metadata:
   namespace: {{ .Release.Namespace }}
   labels:
-    app: postgres-db
-  name: postgres-db
+    app: omotes-postgres
+  name: omotes-postgres
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: postgres-db
+      app: omotes-postgres
   strategy:
     type: Recreate
   template:
     metadata:
       labels:
-        app: postgres-db
+        app: omotes-postgres
     spec:
       containers:
         - env:
@@ -26,17 +26,17 @@ spec:
             - name: POSTGRES_USER
               valueFrom:
                 configMapKeyRef:
-                  name: env-vars-cm
+                  name: omotes-env-vars-cm
                   key: POSTGRES_ROOT_USER
             - name: POSTGRES_PASSWORD
               valueFrom:
                 secretKeyRef:
-                  name: env-vars-secrets
+                  name: omotes-env-vars-secrets
                   key: POSTGRES_ROOT_PASSWORD
             - name: LOG_LEVEL
               valueFrom:
                 configMapKeyRef:
-                  name: env-vars-cm
+                  name: omotes-env-vars-cm
                   key: LOG_LEVEL
           image: postgres:15.4
           livenessProbe:
@@ -50,18 +50,18 @@ spec:
             failureThreshold: 10
             periodSeconds: 5
             timeoutSeconds: 5
-          name: postgres-db
+          name: omotes-postgres
           volumeMounts:
             - mountPath: /var/lib/postgresql/data
-              name: postgres-data
+              name: omotes-postgres-pvc
       restartPolicy: Always
       volumes:
-        - name: postgres-data
+        - name: omotes-postgres-pvc
           persistentVolumeClaim:
-            claimName: postgres-data
+            claimName: omotes-postgres-pvc
         - configMap:
             items:
               - key: init.sql
                 path: init.sql
-            name: postgres-init-cm
-          name: postgres-init-cm
+            name: omotes-postgres-init-cm
+          name: omotes-postgres-init-cm

@@ -4,7 +4,7 @@ metadata:
   namespace: {{ .Release.Namespace }}
   annotations:
     use-subpath: "true"
-  name: postgres-init-cm
+  name: omotes-postgres-init-cm
 data:
   init.sql: |
     CREATE USER :POSTGRESQL_USERNAME WITH PASSWORD :'POSTGRESQL_PASSWORD';

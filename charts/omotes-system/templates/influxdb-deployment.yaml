@@ -3,19 +3,19 @@ kind: Deployment
 metadata:
   namespace: {{ .Release.Namespace }}
   labels:
-    app: influxdb
-  name: influxdb
+    app: omotes-influxdb
+  name: omotes-influxdb
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: influxdb
+      app: omotes-influxdb
   strategy:
     type: Recreate
   template:
     metadata:
       labels:
-        app: influxdb
+        app: omotes-influxdb
     spec:
 #      initContainers:
 #        - name: influxdb-setup
@@ -24,27 +24,27 @@ spec:
 #            - name: INFLUXDB_ADMIN_USER
 #              valueFrom:
 #                configMapKeyRef:
-#                  name: env-vars-cm
+#                  name: omotes-env-vars-cm
 #                  key: INFLUXDB_ADMIN_USER
 #            - name: INFLUXDB_ADMIN_PASSWORD
 #              valueFrom:
 #                secretKeyRef:
-#                  name: env-vars-secrets
+#                  name: omotes-env-vars-secrets
 #                  key: INFLUXDB_ADMIN_PASSWORD
 #            - name: INFLUXDB_PORT
 #              valueFrom:
 #                configMapKeyRef:
-#                  name: env-vars-cm
+#                  name: omotes-env-vars-cm
 #                  key: INFLUXDB_PORT
 #            - name: INFLUXDB_HTTP_BIND_ADDRESS
 #              valueFrom:
 #                configMapKeyRef:
-#                  name: env-vars-cm
+#                  name: omotes-env-vars-cm
 #                  key: INFLUXDB_PORT_BIND
 #            - name: INFLUXDB_BIND_ADDRESS
 #              valueFrom:
 #                configMapKeyRef:
-#                  name: env-vars-cm
+#                  name: omotes-env-vars-cm
 #                  key: INFLUXDB_RPC_PORT_BIND
 #            - name: INFLUXDB_DB
 #              value: omotes_timeseries
@@ -53,27 +53,27 @@ spec:
 ##            - name: INFLUXDB_WRITE_USER
 ##              valueFrom:
 ##                configMapKeyRef:
-##                  name: env-vars-cm
+##                  name: omotes-env-vars-cm
 ##                  key: INFLUXDB_WRITE_USER
 ##            - name: INFLUXDB_WRITE_USER_PASSWORD
 ##              valueFrom:
 ##                secretKeyRef:
-##                  name: env-vars-secrets
+##                  name: omotes-env-vars-secrets
 ##                  key: INFLUXDB_WRITE_USER_PASSWORD
 ##            - name: INFLUXDB_FRONTEND_ADMIN_USER
 ##              valueFrom:
 ##                configMapKeyRef:
-##                  name: env-vars-cm
+##                  name: omotes-env-vars-cm
 ##                  key: INFLUXDB_FRONTEND_ADMIN_USER
 ##            - name: INFLUXDB_FRONTEND_ADMIN_USER_PASSWORD
 ##              valueFrom:
 ##                secretKeyRef:
-##                  name: env-vars-secrets
+##                  name: omotes-env-vars-secrets
 ##                  key: INFLUXDB_FRONTEND_ADMIN_USER_PASSWORD
 #            - name: LOG_LEVEL
 #              valueFrom:
 #                configMapKeyRef:
-#                  name: env-vars-cm
+#                  name: omotes-env-vars-cm
 #                  key: LOG_LEVEL
 #          command: [ 'sh', '-c',
 #            '
@@ -87,8 +87,8 @@ spec:
 #          ]
 #          volumeMounts:
 #            - mountPath: /var/lib/influxdb
-#              name: influxdb-storage
-#            - name: influxdb-init-cm
+#              name: omotes-influxdb-pvc
+#            - name: omotes-influxdb-init-cm
 #              mountPath: /influxdb-init.sh
 #              subPath: influxdb-init.sh
       containers:
@@ -98,27 +98,27 @@ spec:
             - name: INFLUXDB_ADMIN_USER
               valueFrom:
                 configMapKeyRef:
-                  name: env-vars-cm
+                  name: omotes-env-vars-cm
                   key: INFLUXDB_ADMIN_USER
             - name: INFLUXDB_ADMIN_PASSWORD
               valueFrom:
                 secretKeyRef:
-                  name: env-vars-secrets
+                  name: omotes-env-vars-secrets
                   key: INFLUXDB_ADMIN_PASSWORD
             - name: INFLUXDB_PORT
               valueFrom:
                 configMapKeyRef:
-                  name: env-vars-cm
+                  name: omotes-env-vars-cm
                   key: INFLUXDB_PORT
             - name: INFLUXDB_HTTP_BIND_ADDRESS
               valueFrom:
                 configMapKeyRef:
-                  name: env-vars-cm
+                  name: omotes-env-vars-cm
                   key: INFLUXDB_PORT_BIND
             - name: INFLUXDB_BIND_ADDRESS
               valueFrom:
                 configMapKeyRef:
-                  name: env-vars-cm
+                  name: omotes-env-vars-cm
                   key: INFLUXDB_RPC_PORT_BIND
             - name: INFLUXDB_DB
               value: omotes_timeseries
@@ -127,7 +127,7 @@ spec:
             - name: LOG_LEVEL
               valueFrom:
                 configMapKeyRef:
-                  name: env-vars-cm
+                  name: omotes-env-vars-cm
                   key: LOG_LEVEL
           ports:
             - containerPort: 8096
@@ -136,7 +136,7 @@ spec:
               protocol: TCP
           volumeMounts:
             - mountPath: /var/lib/influxdb
-              name: influxdb-storage
+              name: omotes-influxdb-pvc
 #          livenessProbe:
 #            exec:
 #              command:
@@ -148,13 +148,13 @@ spec:
 #            timeoutSeconds: 5
       restartPolicy: Always
       volumes:
-        - name: influxdb-storage
+        - name: omotes-influxdb-pvc
           persistentVolumeClaim:
-            claimName: influxdb-storage
+            claimName: omotes-influxdb-pvc
         - configMap:
             items:
               - key: influxdb-init.sh
                 path: influxdb-init.sh
-            name: influxdb-init-cm
+            name: omotes-influxdb-init-cm
             defaultMode: 0777
-          name: influxdb-init-cm
+          name: omotes-influxdb-init-cm

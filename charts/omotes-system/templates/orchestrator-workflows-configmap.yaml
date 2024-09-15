@@ -5,8 +5,8 @@ metadata:
   annotations:
     use-subpath: "true"
   labels:
-    app: orchestrator
-  name: orchestrator-workflows-cm
+    app: omotes-orchestrator
+  name: omotes-orchestrator-workflows-cm
 data:
   workflow_config_nwn.json: |-
     [

@@ -3,7 +3,7 @@ kind: Service
 metadata:
   namespace: {{ .Release.Namespace }}
   labels:
-    app: rabbitmq
+    app: omotes-rabbitmq
   name: omotes-rabbitmq
 spec:
   ports:
@@ -14,4 +14,4 @@ spec:
       port: 15672
       targetPort: 15672
   selector:
-    app: rabbitmq
+    app: omotes-rabbitmq

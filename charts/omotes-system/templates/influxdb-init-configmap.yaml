@@ -4,7 +4,7 @@ metadata:
   namespace: {{ .Release.Namespace }}
   annotations:
     use-subpath: "true"
-  name: influxdb-init-cm
+  name: omotes-influxdb-init-cm
 data:
   influxdb-init.sh: |
     INFLUXDB_EXEC="influx -username $INFLUXDB_ADMIN_USER -password $INFLUXDB_ADMIN_PASSWORD -host omotes-influxdb -port $INFLUXDB_PORT -execute"

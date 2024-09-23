@@ -54,6 +54,7 @@ spec:
           volumeMounts:
             - mountPath: /var/lib/postgresql/data
               name: omotes-postgres-pvc
+              subPath: postgres
       restartPolicy: Always
       volumes:
         - name: omotes-postgres-pvc

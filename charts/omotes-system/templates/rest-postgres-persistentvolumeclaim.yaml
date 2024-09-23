@@ -1,11 +1,13 @@
+{{ if .Values.omotesRest.enabled }}
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
   namespace: {{ .Release.Namespace }}
-  name: omotes-rabbitmq-pvc
+  name: omotes-rest-postgres-pvc
 spec:
   accessModes:
     - ReadWriteOnce
   resources:
     requests:
-      storage: {{ .Values.rabbitmq.storage | quote }}
+      storage: {{ .Values.omotesRest.postgresStorage | quote }}
+{{ end }}

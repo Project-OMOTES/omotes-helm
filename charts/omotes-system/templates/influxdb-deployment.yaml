@@ -17,88 +17,14 @@ spec:
       labels:
         app: omotes-influxdb
     spec:
-#      initContainers:
-#        - name: influxdb-setup
-#          image: influxdb:1.7
-#          env:
-#            - name: INFLUXDB_ADMIN_USER
-#              valueFrom:
-#                configMapKeyRef:
-#                  name: omotes-env-vars-cm
-#                  key: INFLUXDB_ADMIN_USER
-#            - name: INFLUXDB_ADMIN_PASSWORD
-#              valueFrom:
-#                secretKeyRef:
-#                  name: omotes-env-vars-secrets
-#                  key: INFLUXDB_ADMIN_PASSWORD
-#            - name: INFLUXDB_PORT
-#              valueFrom:
-#                configMapKeyRef:
-#                  name: omotes-env-vars-cm
-#                  key: INFLUXDB_PORT
-#            - name: INFLUXDB_HTTP_BIND_ADDRESS
-#              valueFrom:
-#                configMapKeyRef:
-#                  name: omotes-env-vars-cm
-#                  key: INFLUXDB_PORT_BIND
-#            - name: INFLUXDB_BIND_ADDRESS
-#              valueFrom:
-#                configMapKeyRef:
-#                  name: omotes-env-vars-cm
-#                  key: INFLUXDB_RPC_PORT_BIND
-#            - name: INFLUXDB_DB
-#              value: omotes_timeseries
-#            - name: INFLUXDB_HTTP_AUTH_ENABLED
-#              value: "true"
-##            - name: INFLUXDB_WRITE_USER
-##              valueFrom:
-##                configMapKeyRef:
-##                  name: omotes-env-vars-cm
-##                  key: INFLUXDB_WRITE_USER
-##            - name: INFLUXDB_WRITE_USER_PASSWORD
-##              valueFrom:
-##                secretKeyRef:
-##                  name: omotes-env-vars-secrets
-##                  key: INFLUXDB_WRITE_USER_PASSWORD
-##            - name: INFLUXDB_FRONTEND_ADMIN_USER
-##              valueFrom:
-##                configMapKeyRef:
-##                  name: omotes-env-vars-cm
-##                  key: INFLUXDB_FRONTEND_ADMIN_USER
-##            - name: INFLUXDB_FRONTEND_ADMIN_USER_PASSWORD
-##              valueFrom:
-##                secretKeyRef:
-##                  name: omotes-env-vars-secrets
-##                  key: INFLUXDB_FRONTEND_ADMIN_USER_PASSWORD
-#            - name: LOG_LEVEL
-#              valueFrom:
-#                configMapKeyRef:
-#                  name: omotes-env-vars-cm
-#                  key: LOG_LEVEL
-#          command: [ 'sh', '-c',
-#            '
-#            influxd;
-###            &
-###            until curl -sL -I localhost:$INFLUXDB_PORT/ping;
-###            do echo waiting for influxdb; sleep 2; done;
-###            chmod +x ./influxdb-init.sh;
-###            ./influxdb-init.sh;
-#            '
-#          ]
-#          volumeMounts:
-#            - mountPath: /var/lib/influxdb
-#              name: omotes-influxdb-pvc
-#            - name: omotes-influxdb-init-cm
-#              mountPath: /influxdb-init.sh
-#              subPath: influxdb-init.sh
       containers:
         - name: influxdb
           image: influxdb:1.7
           env:
             - name: INFLUXDB_ADMIN_USER
               valueFrom:
-                configMapKeyRef:
-                  name: omotes-env-vars-cm
+                secretKeyRef:
+                  name: omotes-env-vars-secrets
                   key: INFLUXDB_ADMIN_USER
             - name: INFLUXDB_ADMIN_PASSWORD
               valueFrom:
@@ -130,9 +56,9 @@ spec:
                   name: omotes-env-vars-cm
                   key: LOG_LEVEL
           ports:
-            - containerPort: 8096
+            - containerPort: {{ .Values.influxdb.port }}
               protocol: TCP
-            - containerPort: 8098
+            - containerPort: {{ .Values.influxdb.rpcPort }}
               protocol: TCP
           volumeMounts:
             - mountPath: /var/lib/influxdb

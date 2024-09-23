@@ -1,0 +1,38 @@
+[
+  {
+    "workflow_type_name": "grow_optimizer_no_heat_losses",
+    "workflow_type_description_name": "Draft Design - Quickscan Validation"
+  },
+  {
+    "workflow_type_name": "grow_optimizer_default",
+    "workflow_type_description_name": "Draft Design - Optimization"
+  },
+  {
+    "workflow_type_name": "grow_optimizer_with_pressure",
+    "workflow_type_description_name": "Draft Design - Optimization with Pressure Drops"
+  },
+  {
+    "workflow_type_name": "grow_simulator",
+    "workflow_type_description_name": "Draft Design - Simulation with Source Merit Order"
+  },
+  {
+    "workflow_type_name": "simulator",
+    "workflow_type_description_name": "Conceptual Design - Simulation",
+    "workflow_parameters": [
+      {
+        "parameter_type": "duration",
+        "key_name": "timestep",
+        "description": "Duration of a timestep in seconds.",
+        "minimum": 0
+      },
+      {
+        "parameter_type": "datetime",
+        "key_name": "start_time"
+      },
+      {
+        "parameter_type": "datetime",
+        "key_name": "end_time"
+      }
+    ]
+  }
+]

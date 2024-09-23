@@ -1,0 +1,7 @@
+{{ $globalContext := . }}
+
+{{- range .Values.workers }}
+{{ $data := dict "globalContext" $globalContext "worker" . }}
+{{- include "omotes-system.mesido-deployment" $data }}
+---
+{{- end }}

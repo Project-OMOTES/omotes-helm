@@ -1,0 +1,16 @@
+{{ if .Values.omotesRest.enabled }}
+apiVersion: v1
+kind: Service
+metadata:
+  namespace: {{ .Release.Namespace }}
+  labels:
+    app: omotes-rest-postgres
+  name: omotes-rest-postgres
+spec:
+  ports:
+    - name: "5432"
+      port: 5432
+      targetPort: 5432
+  selector:
+    app: omotes-rest-postgres
+{{ end }}

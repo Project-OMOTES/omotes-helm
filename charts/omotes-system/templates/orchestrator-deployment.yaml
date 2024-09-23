@@ -23,8 +23,8 @@ spec:
           env:
             - name: INFLUXDB_ADMIN_USER
               valueFrom:
-                configMapKeyRef:
-                  name: omotes-env-vars-cm
+                secretKeyRef:
+                  name: omotes-env-vars-secrets
                   key: INFLUXDB_ADMIN_USER
             - name: INFLUXDB_ADMIN_PASSWORD
               valueFrom:
@@ -52,8 +52,8 @@ spec:
               value: "true"
             - name: INFLUXDB_WRITE_USER
               valueFrom:
-                configMapKeyRef:
-                  name: omotes-env-vars-cm
+                secretKeyRef:
+                  name: omotes-env-vars-secrets
                   key: INFLUXDB_WRITE_USER
             - name: INFLUXDB_WRITE_USER_PASSWORD
               valueFrom:
@@ -62,8 +62,8 @@ spec:
                   key: INFLUXDB_WRITE_USER_PASSWORD
             - name: INFLUXDB_FRONTEND_ADMIN_USER
               valueFrom:
-                configMapKeyRef:
-                  name: omotes-env-vars-cm
+                secretKeyRef:
+                  name: omotes-env-vars-secrets
                   key: INFLUXDB_FRONTEND_ADMIN_USER
             - name: INFLUXDB_FRONTEND_ADMIN_USER_PASSWORD
               valueFrom:
@@ -94,8 +94,8 @@ spec:
               value: omotes_jobs
             - name: PG_ROOT_USER
               valueFrom:
-                configMapKeyRef:
-                  name: omotes-env-vars-cm
+                secretKeyRef:
+                  name: omotes-env-vars-secrets
                   key: POSTGRES_ROOT_USER
             - name: PG_ROOT_PASSWORD
               valueFrom:
@@ -113,8 +113,8 @@ spec:
               value: "5432"
             - name: PG_ORCHESTRATOR_USER_NAME
               valueFrom:
-                configMapKeyRef:
-                  name: omotes-env-vars-cm
+                secretKeyRef:
+                  name: omotes-env-vars-secrets
                   key: POSTGRES_ORCHESTRATOR_USER_NAME
             - name: PG_ORCHESTRATOR_USER_PASSWORD
               valueFrom:
@@ -129,15 +129,15 @@ spec:
             '
             until pg_isready -h $PG_HOST -p $PG_PORT -d $PG_DB;
             do echo waiting for database; sleep 2; done;
-            psql postgresql://$PG_ROOT_USER:$PG_ROOT_PASSWORD@$PG_HOST:$PG_PORT/$PG_DB -v POSTGRESQL_USERNAME=$PG_ORCHESTRATOR_USER_NAME -v POSTGRESQL_PASSWORD=$PG_ORCHESTRATOR_USER_PASSWORD -f /init.sql
+            psql postgresql://$PG_ROOT_USER:$PG_ROOT_PASSWORD@$PG_HOST:$PG_PORT/$PG_DB -v PG_USERNAME=$PG_ORCHESTRATOR_USER_NAME -v PG_PASSWORD=$PG_ORCHESTRATOR_USER_PASSWORD -v PG_DB=$PG_DB -f /init.sql
             '
           ]
       containers:
         - env:
             - name: CELERY_RABBITMQ_USERNAME
               valueFrom:
-                configMapKeyRef:
-                  name: omotes-env-vars-cm
+                secretKeyRef:
+                  name: omotes-env-vars-secrets
                   key: RABBITMQ_CELERY_USER_NAME
             - name: CELERY_RABBITMQ_PASSWORD
               valueFrom:
@@ -152,8 +152,8 @@ spec:
               value: omotes_celery
             - name: SDK_RABBITMQ_USERNAME
               valueFrom:
-                configMapKeyRef:
-                  name: omotes-env-vars-cm
+                secretKeyRef:
+                  name: omotes-env-vars-secrets
                   key: RABBITMQ_OMOTES_USER_NAME
             - name: SDK_RABBITMQ_PASSWORD
               valueFrom:
@@ -168,8 +168,8 @@ spec:
               value: omotes
             - name: TASK_RABBITMQ_USERNAME
               valueFrom:
-                configMapKeyRef:
-                  name: omotes-env-vars-cm
+                secretKeyRef:
+                  name: omotes-env-vars-secrets
                   key: RABBITMQ_CELERY_USER_NAME
             - name: TASK_RABBITMQ_PASSWORD
               valueFrom:
@@ -190,8 +190,8 @@ spec:
               value: omotes_jobs
             - name: POSTGRESQL_USERNAME
               valueFrom:
-                configMapKeyRef:
-                  name: omotes-env-vars-cm
+                secretKeyRef:
+                  name: omotes-env-vars-secrets
                   key: POSTGRES_ORCHESTRATOR_USER_NAME
             - name: POSTGRESQL_PASSWORD
               valueFrom:
@@ -203,7 +203,7 @@ spec:
                 configMapKeyRef:
                   name: omotes-env-vars-cm
                   key: LOG_LEVEL
-          image: ghcr.io/project-omotes/omotes_orchestrator:1.0.0
+          image: {{ .Values.orchestrator.image }}:{{ .Values.orchestrator.version }}
           name: omotes-orchestrator
           volumeMounts:
             - mountPath: /config/workflow_config.json
@@ -213,7 +213,7 @@ spec:
       volumes:
         - configMap:
             items:
-              - key: workflow_config_nwn.json
+              - key: workflow_config.json
                 path: workflow_config.json
             name: omotes-orchestrator-workflows-cm
           name: omotes-orchestrator-workflows-cm

@@ -1,28 +1,29 @@
+{{ if .Values.omotesRest.enabled }}
 apiVersion: apps/v1
 kind: Deployment
 metadata:
   namespace: {{ .Release.Namespace }}
   labels:
-    app: omotes-postgres
-  name: omotes-postgres
+    app: omotes-rest-postgres
+  name: omotes-rest-postgres
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: omotes-postgres
+      app: omotes-rest-postgres
   strategy:
     type: Recreate
   template:
     metadata:
       labels:
-        app: omotes-postgres
+        app: omotes-rest-postgres
     spec:
       containers:
         - env:
             - name: PGDATA
               value: /var/lib/postgresql/data
             - name: POSTGRES_DB
-              value: omotes_jobs
+              value: omotes_rest
             - name: POSTGRES_USER
               valueFrom:
                 secretKeyRef:
@@ -46,16 +47,17 @@ spec:
                 - -U
                 - root
                 - -d
-                - omotes_jobs
+                - omotes_rest
             failureThreshold: 10
             periodSeconds: 5
             timeoutSeconds: 5
           name: omotes-postgres
           volumeMounts:
             - mountPath: /var/lib/postgresql/data
-              name: omotes-postgres-pvc
+              name: omotes-rest-postgres-pvc
       restartPolicy: Always
       volumes:
-        - name: omotes-postgres-pvc
+        - name: omotes-rest-postgres-pvc
           persistentVolumeClaim:
-            claimName: omotes-postgres-pvc
+            claimName: omotes-rest-postgres-pvc
+{{ end }}
